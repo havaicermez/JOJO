@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>JoJo Stand Allocator</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+/* --- Body & Container --- */
+body {
+  font-family: 'Press Start 2P', cursive;
+  margin:0; padding:0;
+  display:flex; justify-content:center; align-items:center;
+  min-height:100vh;
+  background: linear-gradient(135deg, #ff9a9e, #fad0c4, #fbc2eb);
+  text-align:center; color:#fff;
+}
+.container {
+  background: rgba(0,0,0,0.85);
+  padding:2rem;
+  border-radius:20px;
+  box-shadow: 0 0 30px #fff7;
+  max-width:550px; width:90%;
+  border: 6px double #ffeb3b;
+}
+
+/* --- Headings --- */
+h1 {
+  font-size:1.4rem;
+  margin-bottom:1rem;
+  color: #ffeb3b;
+  text-shadow:3px 3px #000;
+}
+
+/* --- Stand Card --- */
+.stand-card {
+  margin-top:1rem;
+  padding:1rem;
+  border:4px solid #ff5722;
+  border-radius:12px;
+  background:#111;
+  display:none;
+  animation: pop 0.5s ease-out forwards;
+  box-shadow:0 0 20px #ffeb3b inset, 0 0 10px #fff7;
+  position:relative;
+}
+@keyframes pop {
+  0% {transform: scale(0.2); opacity:0;}
+  100% {transform: scale(1); opacity:1;}
+}
+
+/* --- Stand Name --- */
+.stand-name {
+  font-size:1rem;
+  color:#ff5722;
+  margin-top:0.5rem;
+  text-shadow:2px 2px #000;
+}
+
+/* --- Stand Image --- */
+img.stand-img {
+  max-width:160px;
+  margin-top:0.5rem;
+  border-radius:10px;
+  border:3px solid #ffeb3b;
+  box-shadow:0 0 10px #fff7;
+  transition: transform 0.3s ease;
+}
+img.stand-img:hover {
+  transform: scale(1.1) rotate(-5deg);
+}
+
+/* --- Buttons --- */
+button {
+  margin-top:0.75rem; padding:0.6rem 1rem; border-radius:8px;
+  font-family: 'Press Start 2P', cursive;
+  font-size:0.75rem; cursor:pointer; border:none;
+  background: #ffeb3b; color:#111; font-weight:bold;
+  transition: all 0.2s ease;
+}
+button:hover {
+  transform: scale(1.1);
+  background: #ff5722; color:#fff;
+  box-shadow:0 0 15px #fff7;
+}
+
+.small {
+  font-size:0.7rem;
+  color:#ccc;
+  margin-top:0.5rem;
+}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>Find your JoJo Stand</h1>
+<div id="status">Checking...</div>
+
+<div id="standCard" class="stand-card">
+  <div class="stand-name" id="standName"></div>
+  <img src="" id="standImg" class="stand-img" alt="Stand Image" />
+  <div class="small">This stand is stored on this browser and will not change unless you clear site data.</div>
+  <div>
+    <button id="revealBtn">Reveal Again</button>
+    <button id="copyBtn">Copy</button>
+  </div>
+</div>
+
+<div id="claimBlock" style="margin-top:1rem; display:none;">
+  <p class="small">No stand yet for this browser. Tap the button to claim one permanently.</p>
+  <button id="claimBtn">Claim my Stand</button>
+</div>
+
+<div id="helper" class="small"></div>
+</div>
+
+<script>
+// --- Full JoJo Stand List ---
+const SPECIAL_STAND = "you will die";
+const SPECIAL_PROB = 0.30;
+
+const standNames = [
+"Star Platinum","The World","Crazy Diamond","Killer Queen","Gold Experience","Sticky Fingers","Stone Free","Tusk Act 4",
+"Made in Heaven","King Crimson","Weather Report","The Hand","Harvest","Hierophant Green","Green Tea","Hermit Purple",
+"Magician's Red","Silver Chariot","The Fool","Emperor","Justice","Lovers","Sun","Death Thirteen","Judgement",
+"High Priestess","Geb","Ebony Devil","Yellow Temperance","Hanged Man","Wheel of Fortune","Dark Blue Moon","Strength",
+"Aqua Necklace","Bad Company","Red Hot Chili Pepper","The Lock","Surface","Love Deluxe","Pearl Jam",
+"Achtung Baby","Ratt","Cinderella","Atom Heart Father","Boy II Man","Earth Wind and Fire","Highway Star",
+"Stray Cat","Super Fly","Moody Blues","Sex Pistols","Aerosmith","Purple Haze","Spice Girl","Chariot Requiem",
+"Gold Experience Requiem","Echoes","Black Sabbath","Soft Machine","Kraft Work","Little Feet","Man in the Mirror",
+"Mr.President","The Grateful Dead","Beach Boy","Baby Face","White Album","Clash","Notorious B.I.G."
+];
+
+// create stands array with placeholder images for each
+const stands = standNames.map(name => ({
+  name:name,
+  img:"https://via.placeholder.com/160/000000/ffeb3b?text="+encodeURIComponent(name)
+}));
+
+// add special stand
+stands.push({name:SPECIAL_STAND,img:"https://via.placeholder.com/160/ff0000/ffffff?text="+encodeURIComponent(SPECIAL_STAND)});
+
+const STORAGE_KEY = "jojo_stand_v3";
+
+// --- Secure Random ---
+function secureRandomFloat(){
+  const arr = new Uint32Array(1);
+  window.crypto.getRandomValues(arr);
+  return arr[0]/4294967296;
+}
+
+// weighted choice
+function chooseWeightedStand(){
+  const r = secureRandomFloat();
+  if(r < SPECIAL_PROB) return stands.find(s=>s.name===SPECIAL_STAND);
+  const otherStands = stands.filter(s=>s.name!==SPECIAL_STAND);
+  const idx = Math.floor((r - SPECIAL_PROB)/(1 - SPECIAL_PROB) * otherStands.length);
+  return otherStands[Math.min(Math.max(0, idx), otherStands.length-1)];
+}
+
+// display stand
+function showStand(stand){
+  document.getElementById("standName").textContent = stand.name;
+  document.getElementById("standImg").src = stand.img;
+  document.getElementById("standCard").style.display = "block";
+  document.getElementById("claimBlock").style.display = "none";
+  document.getElementById("status").textContent = "You've claimed a stand!";
+}
+
+// storage
+function saveStand(stand){
+  try{
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(stand));
+    document.cookie = `${STORAGE_KEY}=${encodeURIComponent(JSON.stringify(stand))};max-age=${60*60*24*365*5};SameSite=Lax;path=/`;
+  }catch(e){console.warn("storage failed", e);}
+}
+
+function getStandFromStorage(){
+  let s = localStorage.getItem(STORAGE_KEY) || (()=>{
+    const m = document.cookie.match('(?:^|;)\\s*' + STORAGE_KEY + '\\s*=\\s*([^;]+)');
+    return m? decodeURIComponent(m[1]): null;
+  })();
+  return s? JSON.parse(s): null;
+}
+
+// --- Events ---
+document.getElementById("claimBtn").addEventListener("click", ()=>{
+  const stand = chooseWeightedStand();
+  saveStand(stand);
+  showStand(stand);
+  document.getElementById("helper").textContent = "Tip: don't clear site data to keep your stand.";
+});
+
+document.getElementById("revealBtn").addEventListener("click", ()=>{
+  const s = getStandFromStorage();
+  if(s) showStand(s);
+});
+
+document.getElementById("copyBtn").addEventListener("click", ()=>{
+  const s = getStandFromStorage();
+  if(!s) return alert("No stand to copy.");
+  navigator.clipboard?.writeText(s.name).then(()=>alert("Copied: "+s.name)).catch(()=>alert("Cannot copy, select manually: "+s.name));
+});
+
+// --- Init ---
+window.addEventListener("load", ()=>{
+  const s = getStandFromStorage();
+  if(s) showStand(s); else document.getElementById("claimBlock").style.display="block";
+});
+</script>
+</body>
+</html>
