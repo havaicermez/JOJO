@@ -5,19 +5,91 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>JoJo Stand Allocator</title>
 <style>
-  body { font-family: system-ui, Segoe UI, Roboto, Helvetica, Arial; max-width: 720px; margin: 3rem auto; padding: 1rem; background:#f5f5f5; }
-  .card { border-radius: 12px; padding: 1.5rem; border: 1px solid #ddd; background:#fff; box-shadow:0 4px 10px rgba(0,0,0,0.1);}
-  button { padding: .6rem 1rem; font-size: 1rem; border-radius: 6px; cursor:pointer; }
-  .stand { font-weight: 700; font-size: 1.25rem; margin-top: .75rem; text-align:center; }
-  .small { font-size: .9rem; color:#555; text-align:center; }
-  #standImage { max-width: 100%; margin-top: .75rem; border-radius: 8px; display:block; margin-left:auto; margin-right:auto; }
-  a { text-decoration:none; color:inherit; }
+  body {
+    font-family: 'Arial Black', Arial, sans-serif;
+    background: url('https://uploads.onecompiler.io/43bfyb79e/43yqqrpt4/571002.jpg') no-repeat center center fixed;
+    background-size: cover;
+    min-height: 100vh;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 2rem;
+    color: #fff;
+}
+
+  .card {
+    background: rgba(0,0,0,0.8);
+    border-radius: 20px;
+    padding: 2rem;
+    max-width: 500px;
+    width: 100%;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    text-align: center;
+    animation: fadeIn 1s ease-out;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-20px);}
+    to { opacity:1; transform: translateY(0);}
+  }
+  h1 {
+    font-family: 'Impact', sans-serif;
+    font-size: 2rem;
+    margin-bottom: 1rem;
+    text-shadow: 2px 2px #000;
+  }
+  .stand {
+    font-weight: 700;
+    font-size: 1.5rem;
+    margin-top: 1rem;
+    text-shadow: 1px 1px #000;
+  }
+  #standImage {
+    max-width: 80%;
+    margin: 1rem auto;
+    border-radius: 15px;
+    border: 3px solid #fff;
+    transition: transform 0.3s, box-shadow 0.3s;
+    display: block;
+  }
+  #standImage:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 25px #fff;
+  }
+  a { text-decoration: none; color: inherit; }
+  button {
+    padding: 0.7rem 1.3rem;
+    font-size: 1rem;
+    border-radius: 12px;
+    border: none;
+    cursor: pointer;
+    margin-top: 0.5rem;
+    transition: all 0.3s ease;
+    font-weight: bold;
+    background: linear-gradient(45deg, #ff69b4, #6a0dad);
+    color: #fff;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+  }
+  button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+  }
+  .small {
+    font-size: 0.85rem;
+    color: #ddd;
+    margin-top: 0.5rem;
+  }
+  #status {
+    font-weight: bold;
+    margin-bottom: 1rem;
+    text-shadow: 1px 1px #000;
+  }
 </style>
 </head>
 <body>
-<h1 style="text-align:center;">Find your JoJo Stand</h1>
 <div class="card">
-  <p id="status" style="text-align:center;">Checking...</p>
+  <h1>Find your JoJo Stand</h1>
+  <p id="status">Checking...</p>
 
   <div id="standBlock" style="display:none">
     <div class="stand" id="standName"></div>
@@ -25,18 +97,18 @@
       <img id="standImage" src="" alt="Your Stand">
     </a>
     <div class="small">This stand is stored on this browser and will not change unless you clear site data.</div>
-    <p style="margin-top:.75rem; text-align:center;">
+    <p style="margin-top:.75rem;">
       <button id="revealBtn">Reveal my Stand</button>
       <button id="copyBtn" style="margin-left:.5rem">Copy</button>
     </p>
   </div>
 
-  <div id="claimBlock" style="display:none; text-align:center;">
+  <div id="claimBlock" style="display:none;">
     <p class="small">No stand yet for this browser. Tap the button to claim one permanently for this browser.</p>
     <button id="claimBtn">Claim my Stand</button>
   </div>
 
-  <div id="helper" style="margin-top:.75rem" class="small"></div>
+  <div id="helper" class="small"></div>
 </div>
 
 <script>
@@ -45,64 +117,90 @@ const SPECIAL_STAND = "You will die poor guy";
 const SPECIAL_PROB = 0.3; // 30%
 
 const stands = [
-  {name: "Star Platinum", img:"https://static.wikia.nocookie.net/jojowiki/images/0/0e/Star_Platinum.png/revision/latest/scale-to-width-down/350?cb=20190701035553"},
-  {name: "The World", img:"https://static.wikia.nocookie.net/jojowiki/images/6/6d/The_World.png/revision/latest/scale-to-width-down/350?cb=20190701035600"},
-  {name: "Crazy Diamond", img:"https://static.wikia.nocookie.net/jojowiki/images/4/4e/Crazy_Diamond.png/revision/latest/scale-to-width-down/350?cb=20190701035606"},
-  {name: "Killer Queen", img:"https://static.wikia.nocookie.net/jojowiki/images/3/3b/Killer_Queen.png/revision/latest/scale-to-width-down/350?cb=20190701035613"},
-  {name: "Gold Experience", img:"https://static.wikia.nocookie.net/jojowiki/images/4/4e/Gold_Experience.png/revision/latest/scale-to-width-down/350?cb=20190701035619"},
-  {name: "Sticky Fingers", img:"https://static.wikia.nocookie.net/jojowiki/images/7/7e/Sticky_Fingers.png/revision/latest/scale-to-width-down/350?cb=20190701035626"},
-  {name: "Stone Free", img:"https://static.wikia.nocookie.net/jojowiki/images/3/3e/Stone_Free.png/revision/latest/scale-to-width-down/350?cb=20190701035632"},
-  {name: "Tusk Act 4", img:"https://static.wikia.nocookie.net/jojowiki/images/0/0e/Tusk_Act_4.png/revision/latest/scale-to-width-down/350?cb=20190701035638"},
-  {name: "Made in Heaven", img:"https://static.wikia.nocookie.net/jojowiki/images/2/2a/Made_in_Heaven.png/revision/latest/scale-to-width-down/350?cb=20190701035644"},
-  {name: "King Crimson", img:"https://static.wikia.nocookie.net/jojowiki/images/6/6d/King_Crimson.png/revision/latest/scale-to-width-down/350?cb=20190701035651"},
-  {name: "Weather Report", img:"https://static.wikia.nocookie.net/jojowiki/images/3/3e/Weather_Report.png/revision/latest/scale-to-width-down/350?cb=20190701035657"},
-  {name: "The Hand", img:"https://static.wikia.nocookie.net/jojowiki/images/6/6d/The_Hand.png/revision/latest/scale-to-width-down/350?cb=20190701035703"},
-  {name: "Harvest", img:"https://static.wikia.nocookie.net/jojowiki/images/1/1d/Harvest.png/revision/latest/scale-to-width-down/350?cb=20190701035709"},
-  {name: "Hierophant Green", img:"https://static.wikia.nocookie.net/jojowiki/images/7/7d/Hierophant_Green.png/revision/latest/scale-to-width-down/350?cb=20190701035715"},
-  {name: "Green Tea", img:"https://static.wikia.nocookie.net/jojowiki/images/5/5e/Green_Tea.png/revision/latest/scale-to-width-down/350?cb=20190701035722"},
-  {name: "Hermit Purple", img:"https://static.wikia.nocookie.net/jojowiki/images/2/2b/Hermit_Purple.png/revision/latest/scale-to-width-down/350?cb=20190701035728"},
-  {name: "Magician's Red", img:"https://static.wikia.nocookie.net/jojowiki/images/4/4e/Magician%27s_Red.png/revision/latest/scale-to-width-down/350?cb=20190701035734"},
-  {name: "Silver Chariot", img:"https://static.wikia.nocookie.net/jojowiki/images/6/6f/Silver_Chariot.png/revision/latest/scale-to-width-down/350?cb=20190701035740"},
-  {name: "The Fool", img:"https://static.wikia.nocookie.net/jojowiki/images/3/3d/The_Fool.png/revision/latest/scale-to-width-down/350?cb=20190701035746"},
-  {name: "Emperor", img:"https://static.wikia.nocookie.net/jojowiki/images/5/5e/Emperor.png/revision/latest/scale-to-width-down/350?cb=20190701035753"},
-  {name: "Justice", img:"https://static.wikia.nocookie.net/jojowiki/images/3/3f/Justice.png/revision/latest/scale-to-width-down/350?cb=20190701035759"},
-  {name: "Lovers", img:"https://static.wikia.nocookie.net/jojowiki/images/6/6a/Lovers.png/revision/latest/scale-to-width-down/350?cb=20190701035805"},
-  {name: "Sun", img:"https://static.wikia.nocookie.net/jojowiki/images/4/4e/Sun.png/revision/latest/scale-to-width-down/350?cb=20190701035811"},
-  {name: "Death Thirteen", img:"https://static.wikia.nocookie.net/jojowiki/images/7/7e/Death_Thirteen.png/revision/latest/scale-to-width-down/350?cb=20190701035817"},
-  {name: "Judgement", img:"https://static.wikia.nocookie.net/jojowiki/images/0/0e/Judgement.png/revision/latest/scale-to-width-down/350?cb=20190701035823"},
-  {name: "High Priestess", img:"https://static.wikia.nocookie.net/jojowiki/images/2/2b/High_Priestess.png/revision/latest/scale-to-width-down/350?cb=20190701035829"},
-  {name: "Geb", img:"https://static.wikia.nocookie.net/jojowiki/images/0/0e/Geb.png/revision/latest/scale-to-width-down/350?cb=20190701035835"},
-  {name: "Ebony Devil", img:"https://static.wikia.nocookie.net/jojowiki/images/5/5e/Ebony_Devil.png/revision/latest/scale-to-width-down/350?cb=20190701035841"},
-  {name: "Yellow Temperance", img:"https://static.wikia.nocookie.net/jojowiki/images/4/4e/Yellow_Temperance.png/revision/latest/scale-to-width-down/350?cb=20190701035847"},
-  {name: "Hanged Man", img:"https://static.wikia.nocookie.net/jojowiki/images/6/6e/Hanged_Man.png/revision/latest/scale-to-width-down/350?cb=20190701035853"},
-  {name: "Wheel of Fortune", img:"https://static.wikia.nocookie.net/jojowiki/images/3/3b/Wheel_of_Fortune.png/revision/latest/scale-to-width-down/350?cb=20190701035859"},
-  {name: "Dark Blue Moon", img:"https://static.wikia.nocookie.net/jojowiki/images/1/1d/Dark_Blue_Moon.png/revision/latest/scale-to-width-down/350?cb=20190701035905"},
-  {name: "Strength", img:"https://static.wikia.nocookie.net/jojowiki/images/0/0e/Strength.png/revision/latest/scale-to-width-down/350?cb=20190701035911"},
-  {name: "Aqua Necklace", img:"https://static.wikia.nocookie.net/jojowiki/images/4/4e/Aqua_Necklace.png/revision/latest/scale-to-width-down/350?cb=20190701035917"},
-  {name: "Bad Company", img:"https://static.wikia.nocookie.net/jojowiki/images/3/3d/Bad_Company.png/revision/latest/scale-to-width-down/350?cb=20190701035923"},
-  {name: "Red Hot Chili Pepper", img:"https://static.wikia.nocookie.net/jojowiki/images/2/2b/Red_Hot_Chili_Pepper.png/revision/latest/scale-to-width-down/350?cb=20190701035929"},
-  {name: "The Lock", img:"https://static.wikia.nocookie.net/jojowiki/images/1/1d/The_Lock.png/revision/latest/scale-to-width-down/350?cb=20190701035935"},
-  {name: "Surface", img:"https://static.wikia.nocookie.net/jojowiki/images/0/0e/Surface.png/revision/latest/scale-to-width-down/350?cb=20190701035941"},
-  {name: "Love Deluxe", img:"https://static.wikia.nocookie.net/jojowiki/images/4/4e/Love_Deluxe.png/revision/latest/scale-to-width-down/350?cb=20190701035947"},
-  {name: "Pearl Jam", img:"https://static.wikia.nocookie.net/jojowiki/images/3/3d/Pearl_Jam.png/revision/latest/scale-to-width-down/350?cb=20190701035953"},
+{name: "Star Platinum", img: "https://static.wikia.nocookie.net/jojowiki/images/0/0e/Star_Platinum.png/revision/latest/scale-to-width-down/350?cb=20190701035553"},
+  {name: "The World", img: "https://static.wikia.nocookie.net/jojowiki/images/6/6d/The_World.png/revision/latest/scale-to-width-down/350?cb=20190701035600"},
+  {name: "Crazy Diamond", img: "https://static.wikia.nocookie.net/jojowiki/images/4/4e/Crazy_Diamond.png/revision/latest/scale-to-width-down/350?cb=20190701035606"},
+  {name: "Killer Queen", img: "https://static.wikia.nocookie.net/jojowiki/images/3/3b/Killer_Queen.png/revision/latest/scale-to-width-down/350?cb=20190701035613"},
+  {name: "Gold Experience", img: "https://static.wikia.nocookie.net/jojowiki/images/4/4e/Gold_Experience.png/revision/latest/scale-to-width-down/350?cb=20190701035619"},
+  {name: "Sticky Fingers", img: "https://static.wikia.nocookie.net/jojowiki/images/7/7e/Sticky_Fingers.png/revision/latest/scale-to-width-down/350?cb=20190701035626"},
+  {name: "Stone Free", img: "https://static.wikia.nocookie.net/jojowiki/images/3/3e/Stone_Free.png/revision/latest/scale-to-width-down/350?cb=20190701035632"},
+  {name: "Tusk Act 4", img: "https://static.wikia.nocookie.net/jojowiki/images/0/0e/Tusk_Act_4.png/revision/latest/scale-to-width-down/350?cb=20190701035638"},
+  {name: "Made in Heaven", img: "https://static.wikia.nocookie.net/jojowiki/images/2/2a/Made_in_Heaven.png/revision/latest/scale-to-width-down/350?cb=20190701035644"},
+  {name: "King Crimson", img: "https://static.wikia.nocookie.net/jojowiki/images/6/6d/King_Crimson.png/revision/latest/scale-to-width-down/350?cb=20190701035651"},
+  {name: "Weather Report", img: "https://static.wikia.nocookie.net/jojowiki/images/3/3e/Weather_Report.png/revision/latest/scale-to-width-down/350?cb=20190701035657"},
+  {name: "The Hand", img: "https://static.wikia.nocookie.net/jojowiki/images/6/6d/The_Hand.png/revision/latest/scale-to-width-down/350?cb=20190701035703"},
+  {name: "Harvest", img: "https://static.wikia.nocookie.net/jojowiki/images/1/1d/Harvest.png/revision/latest/scale-to-width-down/350?cb=20190701035709"},
+  {name: "Hierophant Green", img: "https://static.wikia.nocookie.net/jojowiki/images/7/7d/Hierophant_Green.png/revision/latest/scale-to-width-down/350?cb=20190701035715"},
+  {name: "Green Tea", img: "https://static.wikia.nocookie.net/jojowiki/images/5/5e/Green_Tea.png/revision/latest/scale-to-width-down/350?cb=20190701035722"},
+  {name: "Hermit Purple", img: "https://static.wikia.nocookie.net/jojowiki/images/2/2b/Hermit_Purple.png/revision/latest/scale-to-width-down/350?cb=20190701035728"},
+  {name: "Magician's Red", img: "https://static.wikia.nocookie.net/jojowiki/images/4/4e/Magician%27s_Red.png/revision/latest/scale-to-width-down/350?cb=20190701035734"},
+  {name: "Silver Chariot", img: "https://static.wikia.nocookie.net/jojowiki/images/6/6f/Silver_Chariot.png/revision/latest/scale-to-width-down/350?cb=20190701035740"},
+  {name: "The Fool", img: "https://static.wikia.nocookie.net/jojowiki/images/3/3d/The_Fool.png/revision/latest/scale-to-width-down/350?cb=20190701035746"},
+  {name: "Emperor", img: "https://static.wikia.nocookie.net/jojowiki/images/5/5e/Emperor.png/revision/latest/scale-to-width-down/350?cb=20190701035753"},
+  {name: "Justice", img: "https://static.wikia.nocookie.net/jojowiki/images/3/3f/Justice.png/revision/latest/scale-to-width-down/350?cb=20190701035759"},
+  {name: "Lovers", img: "https://static.wikia.nocookie.net/jojowiki/images/6/6a/Lovers.png/revision/latest/scale-to-width-down/350?cb=20190701035805"},
+  {name: "Sun", img: "https://static.wikia.nocookie.net/jojowiki/images/4/4e/Sun.png/revision/latest/scale-to-width-down/350?cb=20190701035811"},
+  {name: "Death Thirteen", img: "https://static.wikia.nocookie.net/jojowiki/images/7/7e/Death_Thirteen.png/revision/latest/scale-to-width-down/350?cb=20190701035817"},
+  {name: "Judgement", img: "https://static.wikia.nocookie.net/jojowiki/images/0/0e/Judgement.png/revision/latest/scale-to-width-down/350?cb=20190701035823"},
+  {name: "High Priestess", img: "https://static.wikia.nocookie.net/jojowiki/images/2/2b/High_Priestess.png/revision/latest/scale-to-width-down/350?cb=20190701035829"},
+  {name: "Geb", img: "https://static.wikia.nocookie.net/jojowiki/images/0/0e/Geb.png/revision/latest/scale-to-width-down/350?cb=20190701035835"},
+  {name: "Ebony Devil", img: "https://static.wikia.nocookie.net/jojowiki/images/5/5e/Ebony_Devil.png/revision/latest/scale-to-width-down/350?cb=20190701035841"},
+  {name: "Yellow Temperance", img: "https://static.wikia.nocookie.net/jojowiki/images/4/4e/Yellow_Temperance.png/revision/latest/scale-to-width-down/350?cb=20190701035847"},
+  {name: "Hanged Man", img: "https://static.wikia.nocookie.net/jojowiki/images/6/6e/Hanged_Man.png/revision/latest/scale-to-width-down/350?cb=20190701035853"},
+  {name: "Wheel of Fortune", img: "https://static.wikia.nocookie.net/jojowiki/images/3/3b/Wheel_of_Fortune.png/revision/latest/scale-to-width-down/350?cb=20190701035859"},
+  {name: "Dark Blue Moon", img: "https://static.wikia.nocookie.net/jojowiki/images/1/1d/Dark_Blue_Moon.png/revision/latest/scale-to-width-down/350?cb=20190701035905"},
+  {name: "Strength", img: "https://static.wikia.nocookie.net/jojowiki/images/0/0e/Strength.png/revision/latest/scale-to-width-down/350?cb=20190701035911"},
+  {name: "Aqua Necklace", img: "https://static.wikia.nocookie.net/jojowiki/images/4/4e/Aqua_Necklace.png/revision/latest/scale-to-width-down/350?cb=20190701035917"},
+  {name: "Bad Company", img: "https://static.wikia.nocookie.net/jojowiki/images/3/3d/Bad_Company.png/revision/latest/scale-to-width-down/350?cb=20190701035923"},
+  {name: "Red Hot Chili Pepper", img: "https://static.wikia.nocookie.net/jojowiki/images/2/2b/Red_Hot_Chili_Pepper.png/revision/latest/scale-to-width-down/350?cb=20190701035929"},
+  {name: "The Lock", img: "https://static.wikia.nocookie.net/jojowiki/images/1/1d/The_Lock.png/revision/latest/scale-to-width-down/350?cb=20190701035935"},
+  {name: "Surface", img: "https://static.wikia.nocookie.net/jojowiki/images/0/0e/Surface.png/revision/latest/scale-to-width-down/350?cb=20190701035941"},
+  {name: "Love Deluxe", img: "https://static.wikia.nocookie.net/jojowiki/images/4/4e/Love_Deluxe.png/revision/latest/scale-to-width-down/350?cb=20190701035947"},
+  {name: "Pearl Jam", img: "https://static.wikia.nocookie.net/jojowiki/images/3/3d/Pearl_Jam.png/revision/latest/scale-to-width-down/350?cb=20190701035953"},
+  {name: "Achtung Baby", img: "https://via.placeholder.com/160/000000/ffeb3b?text=Achtung+Baby"},
+  {name: "Ratt", img: "https://via.placeholder.com/160/000000/ffeb3b?text=Ratt"},
+  {name: "Cinderella", img: "https://via.placeholder.com/160/000000/ffeb3b?text=Cinderella"},
+  {name: "Atom Heart Father", img: "https://via.placeholder.com/160/000000/ffeb3b?text=Atom+Heart+Father"},
+  {name: "Boy II Man", img: "https://via.placeholder.com/160/000000/ffeb3b?text=Boy+II+Man"},
+  {name: "Earth Wind and Fire", img: "https://via.placeholder.com/160/000000/ffeb3b?text=Earth+Wind+and+Fire"},
+  {name: "Highway Star", img: "https://via.placeholder.com/160/000000/ffeb3b?text=Highway+Star"},
+  {name: "Stray Cat", img: "https://static.wikia.nocookie.net/jojowiki/images/1/17/Stray_Cat.png/revision/latest/scale-to-width-down/350?cb=20190701040000"},
+  {name: "Super Fly", img: "https://static.wikia.nocookie.net/jojowiki/images/0/06/Super_Fly.png/revision/latest/scale-to-width-down/350?cb=20190701040006"},
+  {name: "Moody Blues", img: "https://static.wikia.nocookie.net/jojowiki/images/3/3f/Moody_Blues.png/revision/latest/scale-to-width-down/350?cb=20190701040012"},
+  {name: "Sex Pistols", img: "https://static.wikia.nocookie.net/jojowiki/images/6/69/Sex_Pistols.png/revision/latest/scale-to-width-down/350?cb=20190701040018"},
+  {name: "Aerosmith", img: "https://static.wikia.nocookie.net/jojowiki/images/8/88/Aerosmith.png/revision/latest/scale-to-width-down/350?cb=20190701040024"},
+  {name: "Purple Haze", img: "https://static.wikia.nocookie.net/jojowiki/images/5/57/Purple_Haze.png/revision/latest/scale-to-width-down/350?cb=20190701040030"},
+  {name: "Spice Girl", img: "https://static.wikia.nocookie.net/jojowiki/images/1/1d/Spice_Girl.png/revision/latest/scale-to-width-down/350?cb=20190701040036"},
+  {name: "Chariot Requiem", img: "https://static.wikia.nocookie.net/jojowiki/images/7/7f/Chariot_Requiem.png/revision/latest/scale-to-width-down/350?cb=20190701040042"},
+  {name: "Gold Experience Requiem", img: "https://static.wikia.nocookie.net/jojowiki/images/2/28/Gold_Experience_Requiem.png/revision/latest/scale-to-width-down/350?cb=20190701040048"},
+  {name: "Echoes", img: "https://static.wikia.nocookie.net/jojowiki/images/1/15/Echoes.png/revision/latest/scale-to-width-down/350?cb=20190701040054"},
+  {name: "Black Sabbath", img: "https://static.wikia.nocookie.net/jojowiki/images/2/25/Black_Sabbath.png/revision/latest/scale-to-width-down/350?cb=20190701040100"},
+  {name: "Soft Machine", img: "https://static.wikia.nocookie.net/jojowiki/images/5/5e/Soft_Machine.png/revision/latest/scale-to-width-down/350?cb=20190701040106"},
+  {name: "Kraft Work", img: "https://via.placeholder.com/160/000000/ffeb3b?text=Kraft+Work"},
+  {name: "Little Feet", img: "https://via.placeholder.com/160/000000/ffeb3b?text=Little+Feet"},
+  {name: "Man in the Mirror", img: "https://via.placeholder.com/160/000000/ffeb3b?text=Man+in+the+Mirror"},
+  {name: "Mr.President", img: "https://via.placeholder.com/160/000000/ffeb3b?text=Mr.President"},
+  {name: "The Grateful Dead", img: "https://via.placeholder.com/160/000000/ffeb3b?text=The+Grateful+Dead"},
+  {name: "Beach Boy", img: "https://via.placeholder.com/160/000000/ffeb3b?text=Beach+Boy"},
+  {name: "Baby Face", img: "https://via.placeholder.com/160/000000/ffeb3b?text=Baby+Face"},
+  {name: "White Album", img: "https://static.wikia.nocookie.net/jojowiki/images/0/05/White_Album.png/revision/latest/scale-to-width-down/350?cb=20190701040112"},
+  {name: "Clash", img: "https://static.wikia.nocookie.net/jojowiki/images/2/2e/Clash.png/revision/latest/scale-to-width-down/350?cb=20190701040118"},
   {name: "You will die poor guy", img:"https://via.placeholder.com/160/ff0000/ffffff?text=You+will+die+poor+guy"}
 ];
 
-// Compute otherStands
-const otherStands = stands.map(s => s.name).filter(n => n !== SPECIAL_STAND);
+const otherStands = stands.map(s=>s.name).filter(n=>n!==SPECIAL_STAND);
 
-// Secure random float
 function secureRandomFloat(){
   const arr = new Uint32Array(1);
   window.crypto.getRandomValues(arr);
-  return arr[0] / 4294967296;
+  return arr[0]/4294967296;
 }
 
 function chooseWeightedStand(){
   const r = secureRandomFloat();
-  if(r < SPECIAL_PROB) return SPECIAL_STAND;
-  const idx = Math.floor((r - SPECIAL_PROB)/(1 - SPECIAL_PROB) * otherStands.length);
-  return otherStands[Math.min(Math.max(0, idx), otherStands.length -1)];
+  if(r<SPECIAL_PROB) return SPECIAL_STAND;
+  const idx = Math.floor((r-SPECIAL_PROB)/(1-SPECIAL_PROB)*otherStands.length);
+  return otherStands[Math.min(Math.max(0,idx),otherStands.length-1)];
 }
 
 function showStand(name){
@@ -113,14 +211,14 @@ function showStand(name){
     document.getElementById('standLink').href = `https://jojo.fandom.com/wiki/${encodeURIComponent(standObj.name)}`;
   }
   document.getElementById('status').textContent = "You've claimed a stand!";
-  document.getElementById('standBlock').style.display = 'block';
-  document.getElementById('claimBlock').style.display = 'none';
+  document.getElementById('standBlock').style.display='block';
+  document.getElementById('claimBlock').style.display='none';
 }
 
 function showClaimPrompt(){
   document.getElementById('status').textContent = "No stand found for this browser.";
-  document.getElementById('standBlock').style.display = 'none';
-  document.getElementById('claimBlock').style.display = 'block';
+  document.getElementById('standBlock').style.display='none';
+  document.getElementById('claimBlock').style.display='block';
 }
 
 function saveStand(name){
@@ -131,32 +229,28 @@ function saveStand(name){
 }
 
 function getCookie(name){
-  const m = document.cookie.match('(?:^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
-  return m ? decodeURIComponent(m[1]) : null;
+  const m = document.cookie.match('(?:^|;)\\s*'+name+'\\s*=\\s*([^;]+)');
+  return m?decodeURIComponent(m[1]):null;
 }
 
-// Event listeners
 document.getElementById('claimBtn').addEventListener('click', ()=>{
   const stand = chooseWeightedStand();
   saveStand(stand);
   showStand(stand);
   document.getElementById('helper').textContent = "Tip: Bookmark this page and don't clear site storage to keep it permanent.";
 });
-
 document.getElementById('revealBtn').addEventListener('click', ()=>{
-  const s = localStorage.getItem(STORAGE_KEY) || getCookie(STORAGE_KEY);
+  const s = localStorage.getItem(STORAGE_KEY)||getCookie(STORAGE_KEY);
   if(s) alert("Your stand: "+s);
 });
-
 document.getElementById('copyBtn').addEventListener('click', ()=>{
-  const s = localStorage.getItem(STORAGE_KEY) || getCookie(STORAGE_KEY);
+  const s = localStorage.getItem(STORAGE_KEY)||getCookie(STORAGE_KEY);
   if(!s) return alert("No stand to copy.");
   navigator.clipboard?.writeText(s).then(()=>alert("Copied: "+s)).catch(()=>alert("Could not copy. Select and copy manually: "+s));
 });
 
-// INIT
 window.addEventListener('load', ()=>{
-  const s = localStorage.getItem(STORAGE_KEY) || getCookie(STORAGE_KEY);
+  const s = localStorage.getItem(STORAGE_KEY)||getCookie(STORAGE_KEY);
   if(s) showStand(s);
   else showClaimPrompt();
 });
